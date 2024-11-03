@@ -1,1 +1,85 @@
+let records = JSON.parse(localStorage.getItem("financeRecords")) || [];
 
+function addIncome() {
+    const date = document.getElementById("incomeDate").value;
+    const category = document.getElementById("incomeCategory").value;
+    const amount = parseFloat(document.getElementById("incomeAmount").value);
+    const description = document.getElementById("incomeDescription").value;
+
+    if (validateInputs(date, category, amount, description)) {
+        records.push({ date, category, amount, description, type: "income" });
+        localStorage.setItem("financeRecords", JSON.stringify(records));
+        alert("Income added successfully.");
+        clearInputs();
+    }
+}
+
+function addExpense() {
+    const date = document.getElementById("expenseDate").value;
+    const category = document.getElementById("expenseCategory").value;
+    const amount = parseFloat(document.getElementById("expenseAmount").value);
+    const description = document.getElementById("expenseDescription").value;
+
+    if (validateInputs(date, category, amount, description)) {
+        records.push({ date, category, amount, description, type: "expense" });
+        localStorage.setItem("financeRecords", JSON.stringify(records));
+        alert("Expense added successfully.");
+        clearInputs();
+    }
+}
+
+function validateInputs(date, category, amount, description) {
+    if (!date || !category || isNaN(amount) || amount <= 0 || !description) {
+        alert("Please fill all fields correctly.");
+        return false;
+    }
+    return true;
+}
+
+function clearInputs() {
+    document.getElementById("incomeDate").value = "";
+    document.getElementById("incomeCategory").value = "";
+    document.getElementById("incomeAmount").value = "";
+    document.getElementById("incomeDescription").value = "";
+    document.getElementById("expenseDate").value = "";
+    document.getElementById("expenseCategory").value = "";
+    document.getElementById("expenseAmount").value = "";
+    document.getElementById("expenseDescription").value = "";
+}
+
+function showSummary() {
+    let totalIncome = records
+        .filter(record => record.type === "income")
+        .reduce((sum, record) => sum + record.amount, 0);
+    let totalExpenses = records
+        .filter(record => record.type === "expense")
+        .reduce((sum, record) => sum + record.amount, 0);
+
+    let netSavings = totalIncome - totalExpenses;
+    document.getElementById("summary").innerText =
+        `Total Income: $${totalIncome.toFixed(2)}\n` +
+        `Total Expenses: $${totalExpenses.toFixed(2)}\n` +
+        `Net Savings: $${netSavings.toFixed(2)}`;
+}
+
+function showMonthlySummary() {
+    let monthlySummary = {};
+
+    records.forEach(record => {
+        const month = record.date.split('-').slice(0, 2).join('-');
+        if (!monthlySummary[month]) {
+            monthlySummary[month] = { income: 0, expense: 0 };
+        }
+        if (record.type === "income") {
+            monthlySummary[month].income += record.amount;
+        } else {
+            monthlySummary[month].expense += record.amount;
+        }
+    });
+
+    let summaryText = '';
+    for (const month in monthlySummary) {
+        const { income, expense } = monthlySummary[month];
+        summaryText += `${month} - Income: $${income.toFixed(2)}, Expense: $${expense.toFixed(2)}, Net: $${(income - expense).toFixed(2)}\n`;
+    }
+    document.getElementById("monthlySummary").innerText = summaryText || "No records found.";
